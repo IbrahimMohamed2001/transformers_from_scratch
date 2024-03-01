@@ -14,10 +14,10 @@ class TranslationDataset(Dataset):
         self.target_language = target_language
         self.max_len = max_len
 
-        self.sos_token = torch.Tensor([source_tokenizer.token_to_id(['SOS'])], dtype=torch.int64)
-        self.eos_token = torch.Tensor([source_tokenizer.token_to_id(['EOS'])], dtype=torch.int64)
-        self.unk_token = torch.Tensor([source_tokenizer.token_to_id(['UNK'])], dtype=torch.int64)
-        self.pad_token = torch.Tensor([source_tokenizer.token_to_id(['PAD'])], dtype=torch.int64)
+        self.sos_token = torch.Tensor([source_tokenizer.token_to_id(['<SOS>'])], dtype=torch.int64)
+        self.eos_token = torch.Tensor([source_tokenizer.token_to_id(['<EOS>'])], dtype=torch.int64)
+        self.unk_token = torch.Tensor([source_tokenizer.token_to_id(['<UNK>'])], dtype=torch.int64)
+        self.pad_token = torch.Tensor([source_tokenizer.token_to_id(['<PAD>'])], dtype=torch.int64)
         
         self.casual_mask = torch.tril(torch.ones(1, max_len, max_len)).int()
 
