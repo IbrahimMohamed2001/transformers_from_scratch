@@ -14,7 +14,7 @@ from tokenizers.pre_tokenizers import Whitespace
 from dataset import TranslationDataset
 
 import warnings
-from config import get_weights_file_path
+from config import get_weights_file_path, get_config
 from torch.utils.tensorboard import SummaryWriter
 
 
@@ -137,3 +137,7 @@ def train_model(config):
             'global_step': global_step,
         }, model_filename)
 
+if __name__ == '__main__':
+    warnings.filterwarnings('ignore')
+    config = get_config()
+    train_model(config)
