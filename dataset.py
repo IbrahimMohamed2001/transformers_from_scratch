@@ -66,3 +66,7 @@ class TranslationDataset(Dataset):
             'source_text': source_text,
             'target_text': target_text
         }
+
+    @staticmethod
+    def casual_mask(size):
+        return torch.tril(torch.ones(1, size, size)).int()

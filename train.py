@@ -38,4 +38,5 @@ def get_dataset(name, config):
     valid_size = len(dataset) - train_size
     train_dataset, valid_dataset = random_split(dataset, [train_size, valid_size])
 
-    train_dataset
+    train_dataset = TranslationDataset(train_dataset, source_tokenizer, target_tokenizer, config['source_language'], config['target_language'], config['max_len'])
+    valid_dataset = TranslationDataset(valid_dataset, source_tokenizer, target_tokenizer, config['source_language'], config['target_language'], config['max_len'])
