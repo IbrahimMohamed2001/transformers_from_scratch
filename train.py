@@ -18,9 +18,6 @@ from config import get_weights_file_path, get_config
 from torch.utils.tensorboard import SummaryWriter
 
 
-# import re
-
-
 def get_all_sentences(dataset, language):
     for item in dataset:
         yield item['translation'][language]
@@ -38,7 +35,7 @@ def get_or_build_tokenizer(config, dataset, language):
         tokenizer = Tokenizer.from_file(str(tokenizer_path))
 
 def get_dataset(name, config):
-    dataset = load_dataset(name, f'{config['source_language']}-{config['target_language']}', split='train')
+    dataset = load_dataset(name, f'{config["source_language"]}-{config["target_language"]}', split='train')
 
     source_tokenizer = get_or_build_tokenizer(config, dataset, config['source_language'])
     target_tokenizer = get_or_build_tokenizer(config, dataset, config['target_language'])
@@ -56,7 +53,7 @@ def get_dataset(name, config):
     for item in tqdm(dataset):
         source_ids = source_tokenizer.encode(item['translation'][config['source_language']])
         max_source_len = max(max_source_len, len(source_ids))
-        
+
         target_ids = target_tokenizer.encode(item['translation'][config['target_language']])
         max_target_len = max(max_target_len, len(target_ids))
 
@@ -73,12 +70,12 @@ def get_dataset(name, config):
         'target_tokenizer': target_tokenizer
     }
 
-def get_model(config, source_vocab_size, target_vocab_size, ):
+def get_model(config, source_vocab_size, target_vocab_size):
     return Seq2SeqTransformer(
-        source_vocab_size, 
-        target_vocab_size, 
-        config['max_len'], 
-        config['max_len'], 
+        source_vocab_size,
+        target_vocab_size,
+        config['max_len'],
+        config['max_len'],
         config['d_model'],
         config['num_layers'],
         config['heads'],
@@ -142,6 +139,8 @@ def train_model(config):
             optimizer.zero_grad()
             global_step += 1
 
+        validate_model(model, valid_loader, target_tokenizer, config['max_len'], device, lambda msg: batch_iterator.write(msg))
+
         model_filename = get_weights_file_path(config, epoch)
         torch.save({
             'epoch': epoch,
@@ -149,6 +148,51 @@ def train_model(config):
             'optimizer_state_dict': optimizer.state_dict(),
             'global_step': global_step,
         }, model_filename)
+
+def validate_model(model, validation_loader, target_tokenizer, max_len, device, print_massage, num_examples=2):
+    model.eval()
+    count = 0
+
+    with torch.no_grad():
+        for batch in validation_loader:
+            count += 1
+            encoder_input = batch['encoder_input'].to(device)
+            encoder_mask = batch['encoder_mask'].to(device)
+
+            model_out = greedy_decode(model, encoder_input, encoder_mask, target_tokenizer, max_len, device)
+
+            source_text = batch['source_text'][0]
+            target_text = batch['target_text'][0]
+            model_out_text = target_tokenizer.decode(model_out.detach().cpu().numpy())
+
+            print_massage('-' * 80)
+            print_massage(f'source: {source_text}')
+            print_massage(f'target: {target_text}')
+            print_massage(f'predicted: {model_out_text}')
+
+            if count == num_examples: break
+
+
+def greedy_decode(model: Seq2SeqTransformer, source, source_mask, target_tokenizer, max_len, device):
+    sos_idx = target_tokenizer.token_to_id('<SOS>')
+    eos_idx = target_tokenizer.token_to_id('<EOS>')
+
+    encoder_output = model.encode(source, source_mask)
+    decoder_input = torch.empty(1, 1).fill_(sos_idx).type_as(source).to(device)
+
+    while True:
+        if decoder_input.size(1) == max_len: break
+
+        decoder_mask = TranslationDataset.casual_mask(decoder_input.size(1)).type_as(source_mask).to(device)
+        decoder_output = model.decode(encoder_output, source_mask, decoder_input, decoder_mask)
+
+        probability = model.project(decoder_output[:, -1])
+        _, next_word = torch.max(probability, dim=1)
+        decoder_input = torch.cat([decoder_input, torch.empty(1, 1).type_as(source).fill_(next_word.item()).to(device)], dim=1)
+
+        if next_word == eos_idx: break
+    return decoder_input.squeeze(0)
+
 
 if __name__ == '__main__':
     warnings.filterwarnings('ignore')
