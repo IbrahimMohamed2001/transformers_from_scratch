@@ -50,6 +50,19 @@ def get_dataset(name, config):
     train_dataset = TranslationDataset(train_dataset, source_tokenizer, target_tokenizer, config['source_language'], config['target_language'], config['max_len'])
     valid_dataset = TranslationDataset(valid_dataset, source_tokenizer, target_tokenizer, config['source_language'], config['target_language'], config['max_len'])
 
+    max_source_len = 0
+    max_target_len = 0
+
+    for item in tqdm(dataset):
+        source_ids = source_tokenizer.encode(item['translation'][config['source_language']])
+        max_source_len = max(max_source_len, len(source_ids))
+        
+        target_ids = target_tokenizer.encode(item['translation'][config['target_language']])
+        max_target_len = max(max_target_len, len(target_ids))
+
+    print(f'the maximum source length is {max_source_len}')
+    print(f'the maximum target length is {max_target_len}')
+
     train_loader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True)
     valid_loader = DataLoader(valid_dataset, batch_size=1, shuffle=True)
 
