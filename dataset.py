@@ -4,6 +4,18 @@ from torch.utils.data import Dataset
 
 
 class TranslationDataset(Dataset):
+    """
+    A PyTorch Dataset for translation tasks.
+
+    Args:
+        dataset (datasets.Dataset): Hugging Face dataset object containing translation pairs.
+        source_tokenizer: Tokenizer for the source language.
+        target_tokenizer: Tokenizer for the target language.
+        source_language (str): Source language identifier.
+        target_language (str): Target language identifier.
+        max_len (int): Maximum sequence length.
+    """
+
     def __init__(self, dataset, source_tokenizer, target_tokenizer, source_language, target_language, max_len):
         super().__init__()
 
@@ -19,12 +31,29 @@ class TranslationDataset(Dataset):
         self.unk_token = torch.Tensor([source_tokenizer.token_to_id(['<UNK>'])], dtype=torch.int64)
         self.pad_token = torch.Tensor([source_tokenizer.token_to_id(['<PAD>'])], dtype=torch.int64)
         
-        self.casual_mask = torch.tril(torch.ones(1, max_len, max_len)).int()
+        self.casual_mask = TranslationDataset.casual_mask(max_len)
 
     def __len__(self):
+        """
+        Returns the number of translation pairs in the dataset.
+
+        Returns:
+            int: Number of translation pairs.
+        """
+
         return len(self.dataset)
-    
+
     def __getitem__(self, index):
+        """
+        Retrieves a translation pair from the dataset.
+
+        Args:
+            index (int): Index of the translation pair in the dataset.
+
+        Returns:
+            dict: Dictionary containing encoder and decoder inputs, masks, labels, and source/target texts.
+        """
+
         source_target_pair = self.dataset[index]
         source_text = source_target_pair['translation'][self.source_language]
         target_text = source_target_pair['translation'][self.target_language]
@@ -69,4 +98,14 @@ class TranslationDataset(Dataset):
 
     @staticmethod
     def casual_mask(size):
+        """
+        Generates a casual mask tensor of the specified size.
+
+        Args:
+            size (int): Size of the casual mask.
+
+        Returns:
+            Tensor: Casual mask tensor.
+        """
+
         return torch.tril(torch.ones(1, size, size)).int()
