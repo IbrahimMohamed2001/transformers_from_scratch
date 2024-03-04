@@ -1,0 +1,14 @@
+{
+    "cSpell.words": [
+        "arange",
+        "dtype",
+        "iwslt",
+        "optim",
+        "preprocesses",
+        "tensorboard",
+        "tmodel",
+        "tqdm",
+        "tril",
+        "unsqueeze"
+    ]
+}

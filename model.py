@@ -47,7 +47,7 @@ class PosEmbedding(nn.Module):
 
         pos_enc[:, 0::2] = torch.sin(pos * div_term)
         pos_enc[:, 1::2] = torch.cos(pos * div_term)
-        pos_enc.unsqueeze(0) #! (1, max_len, d_model)
+        pos_enc = pos_enc.unsqueeze(0) #! (1, max_len, d_model)
 
         self.register_buffer('pos_enc', pos_enc)
 
@@ -226,7 +226,7 @@ class Encoder(nn.Module):
         self.norm = LayerNorm()
 
     def forward(self, x, enc_mask=None):
-        for layer in range(self.layers):
+        for layer in self.layers:
             x = layer(x, enc_mask)
         return self.norm(x)
 
@@ -277,7 +277,7 @@ class Decoder(nn.Module):
         self.norm = LayerNorm()
 
     def forward(self, x, bottleneck, enc_mask=None, dec_mask=None):
-        for layer in range(self.layers):
+        for layer in self.layers:
             x = layer(x, bottleneck, enc_mask, dec_mask)
         return self.norm(x)
 

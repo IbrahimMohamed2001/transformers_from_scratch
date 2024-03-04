@@ -70,30 +70,30 @@ def get_dataset(name, config):
         dict: A dictionary containing train and validation data loaders, source and target tokenizers.
     """
 
-    dataset = load_dataset(name, f'{config["source_language"]}-{config["target_language"]}', split='train')
+    dataset = load_dataset(name, f'{name}-{config["source_language"]}-{config["target_language"]}', split='train')
+
+    train_size = int(0.9 * len(dataset))
+    valid_size = len(dataset) - train_size
+    train_dataset, valid_dataset = random_split(dataset, [train_size, valid_size])
 
     source_tokenizer = get_or_build_tokenizer(config, dataset, config['source_language'])
     target_tokenizer = get_or_build_tokenizer(config, dataset, config['target_language'])
 
-    train_size = len(0.9 * len(dataset))
-    valid_size = len(dataset) - train_size
-    train_dataset, valid_dataset = random_split(dataset, [train_size, valid_size])
-
     train_dataset = TranslationDataset(train_dataset, source_tokenizer, target_tokenizer, config['source_language'], config['target_language'], config['max_len'])
     valid_dataset = TranslationDataset(valid_dataset, source_tokenizer, target_tokenizer, config['source_language'], config['target_language'], config['max_len'])
 
-    max_source_len = 0
-    max_target_len = 0
+    # max_source_len = 0
+    # max_target_len = 0
 
-    for item in tqdm(dataset):
-        source_ids = source_tokenizer.encode(item['translation'][config['source_language']])
-        max_source_len = max(max_source_len, len(source_ids))
+    # for item in tqdm(dataset):
+    #     source_ids = source_tokenizer.encode(item['translation'][config['source_language']])
+    #     max_source_len = max(max_source_len, len(source_ids))
 
-        target_ids = target_tokenizer.encode(item['translation'][config['target_language']])
-        max_target_len = max(max_target_len, len(target_ids))
+    #     target_ids = target_tokenizer.encode(item['translation'][config['target_language']])
+    #     max_target_len = max(max_target_len, len(target_ids))
 
-    print(f'the maximum source length is {max_source_len}')
-    print(f'the maximum target length is {max_target_len}')
+    # print(f'the maximum source length is {max_source_len}')
+    # print(f'the maximum target length is {max_target_len}')
 
     train_loader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True)
     valid_loader = DataLoader(valid_dataset, batch_size=1, shuffle=True)
@@ -143,10 +143,11 @@ def train_model(config):
 
     Path(config['model_folder']).mkdir(parents=True, exist_ok=True)
 
-    train_loader = get_dataset('iwslt2017', config)['train_dataloader']
-    valid_loader = get_dataset('iwslt2017', config)['valid_dataloader']
-    source_tokenizer = get_dataset('iwslt2017', config)['source_tokenizer']
-    target_tokenizer = get_dataset('iwslt2017', config)['target_tokenizer']
+    dataset = get_dataset('iwslt2017', config)
+    train_loader = dataset['train_dataloader']
+    valid_loader = dataset['valid_dataloader']
+    source_tokenizer = dataset['source_tokenizer']
+    target_tokenizer = dataset['target_tokenizer']
 
     model = get_model(config, source_tokenizer.get_vocab_size(), target_tokenizer.get_vocab_size()).to(device)
 
@@ -185,7 +186,7 @@ def train_model(config):
             loss = criterion(proj_output.view(-1, target_tokenizer.get_vocab_size()), label.view(-1))
             batch_iterator.set_postfix({'loss': f'{loss.item():6.3f}'})
 
-            writer.add_scaler('train_loss', loss.item, global_step)
+            writer.add_scalar('train_loss', loss.item(), global_step)
             writer.flush()
 
             loss.backward()
