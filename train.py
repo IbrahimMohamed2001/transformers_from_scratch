@@ -58,6 +58,7 @@ def get_or_build_tokenizer(config, dataset, language):
         tokenizer = Tokenizer.from_file(str(tokenizer_path))
     return tokenizer
 
+
 def get_dataset(name, config):
     """
     Loads a translation dataset, preprocesses it, and prepares data loaders for training and validation.
@@ -82,19 +83,6 @@ def get_dataset(name, config):
     train_dataset = TranslationDataset(train_dataset, source_tokenizer, target_tokenizer, config['source_language'], config['target_language'], config['max_len'])
     valid_dataset = TranslationDataset(valid_dataset, source_tokenizer, target_tokenizer, config['source_language'], config['target_language'], config['max_len'])
 
-    # max_source_len = 0
-    # max_target_len = 0
-
-    # for item in tqdm(dataset):
-    #     source_ids = source_tokenizer.encode(item['translation'][config['source_language']])
-    #     max_source_len = max(max_source_len, len(source_ids))
-
-    #     target_ids = target_tokenizer.encode(item['translation'][config['target_language']])
-    #     max_target_len = max(max_target_len, len(target_ids))
-
-    # print(f'the maximum source length is {max_source_len}')
-    # print(f'the maximum target length is {max_target_len}')
-
     train_loader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True)
     valid_loader = DataLoader(valid_dataset, batch_size=1, shuffle=True)
 
@@ -104,6 +92,7 @@ def get_dataset(name, config):
         'source_tokenizer': source_tokenizer,
         'target_tokenizer': target_tokenizer
     }
+
 
 def get_model(config, source_vocab_size, target_vocab_size):
     """
@@ -129,6 +118,7 @@ def get_model(config, source_vocab_size, target_vocab_size):
         config['hidden_size_ff'],
         config['dropout']
     )
+
 
 def train_model(config):
     """
@@ -203,6 +193,7 @@ def train_model(config):
             'optimizer_state_dict': optimizer.state_dict(),
             'global_step': global_step,
         }, model_filename)
+
 
 def validate_model(model, validation_loader, target_tokenizer, max_len, device, print_massage, num_examples=2):
     """
