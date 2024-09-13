@@ -32,8 +32,8 @@ This repository provides a complete implementation of the Transformer model, inc
 To get started, clone the repository and install the required dependencies:
 
 ``` bash
-git clone https://github.com/IbrahimMohamed2001/transformer-from-scratch.git
-cd transformer-from-scratch
+git clone https://github.com/IbrahimMohamed2001/transformers-from-scratch.git
+cd transformers-from-scratch
 pip install -r requirements.txt
 ```
 
