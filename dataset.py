@@ -133,7 +133,7 @@ class TranslationDataset(Dataset):
     @staticmethod
     def causal_mask(size):
         """
-        Generates a casual mask tensor of the specified size.
+        Generates a causal mask tensor of the specified size.
 
         Args:
             size (int): Size of the casual mask.
