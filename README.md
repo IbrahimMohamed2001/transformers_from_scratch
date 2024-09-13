@@ -90,5 +90,3 @@ The `config.py` file contains the configuration parameters for the model and tra
 ## Acknowledgements
 
 This implementation is inspired by the original Transformer paper "Attention is All You Need" by Vaswani et al. and various open-source implementations available online.
-
-If you find this repository useful, please consider giving it a star!
